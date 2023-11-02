@@ -8,6 +8,6 @@ public class ArgModeCheckerTests
     [TestMethod]
     public void CheckModeTest()
     {
-
+        var client = new Tcpf
     }
 }
