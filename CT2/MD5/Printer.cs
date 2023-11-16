@@ -7,6 +7,15 @@ public static class Printer
         Console.WriteLine($"Hashed {hash.Path} directory");
         Console.WriteLine($"Hash equals {Encoding.UTF8.GetString(hash.Hash, 0, hash.Hash.Count())}");
         Console.WriteLine($"Elapsed {hash.Time} milliseconds");
-        Console.WriteLine($"Used {hash.Mode} threading mode");
+        string mode;
+        if (hash.Mode == DirectoryHashCommon.ThreadMode.SingleThread)
+        {
+            mode = "single";
+        }
+        else
+        {
+            mode = "multi";
+        }
+        Console.WriteLine($"Used {mode} threading mode");
     }
 }

@@ -2,7 +2,7 @@ namespace MyMD5;
 
 public class DirectoryHashSingleThread : DirectoryHashCommon
 {
-    public static DirectoryHash CalculateDirectoryHash(string directoryPath)
+    public static async Task<DirectoryHash> CalculateDirectoryHash(string directoryPath)
     {
         if (!Directory.Exists(directoryPath))
         {
@@ -11,62 +11,32 @@ public class DirectoryHashSingleThread : DirectoryHashCommon
 
         var stopwatch = new Stopwatch();
         stopwatch.Start();
-        var resultHash = getDirectoryHash(directoryPath);
+        var resultHash = await getDirectoryHash(directoryPath);
         stopwatch.Stop();
-        var result = new DirectoryHash(directoryPath, stopwatch.ElapsedMilliseconds, resultHash, "single");
+        var result = new DirectoryHash(directoryPath, stopwatch.ElapsedMilliseconds, resultHash, ThreadMode.SingleThread);
         return result;
     }
-    private static byte[] hashContentSet(string directoryName,
-                    List<byte[]> fileHashes, List<byte[]> directoryHashes)
+
+    private static async Task<byte[]> getDirectoryHash(string directoryName)
     {
-        var byteDirectoryName = Encoding.UTF8.GetBytes(directoryName);
-        var concatenated = new byte[byteDirectoryName.Count() +
-                                    fileHashes.Count() +
-                                    directoryHashes.Count()];
-
-        foreach (var c in byteDirectoryName)
-        {
-            concatenated.Append(c);
-        }
-
-        foreach (var fileHash in fileHashes)
-        {
-            foreach (var c in fileHash)
-            {
-                concatenated.Append(c);
-            }
-        }
-
-        foreach (var directoryHash in directoryHashes)
-        {
-            foreach (var c in directoryHash)
-            {
-                concatenated.Append(c);
-            }
-        }
-
-        var resultHash = MD5.HashData(concatenated);
-        return resultHash;
-    }
-
-    private static byte[] getDirectoryHash(string directoryName)
-    {
-        var files = Directory.EnumerateFiles(directoryName);
-        var directories = Directory.EnumerateDirectories(directoryName);
-        var innerFileHashes = new List<byte[]>();
-        var innerDirectoryHashes = new List<byte[]>();
+        var files = Directory.GetFiles(directoryName);
+        var directories = Directory.GetDirectories(directoryName);
+        var innerFileHashes = new byte[files.Count()][];
+        var innerDirectoryHashes = new byte[directories.Count()][];
 
         files.Order();
         directories.Order();
 
-        foreach (var file in files)
+        for (var i = 0; i < files.Count(); ++i)
         {
-            innerFileHashes.Append(getFileHash(file));
+            var innerFileHash = await getFileHash(files[i]);
+            innerFileHashes[i] = innerFileHash;
         }
 
-        foreach (var directory in directories)
+        for (var i = 0; i < directories.Count(); ++i)
         {
-            innerDirectoryHashes.Append(getDirectoryHash(directory));
+            var innerDirectoryHash = await getDirectoryHash(directories[i]);
+            innerDirectoryHashes[i] = innerDirectoryHash;
         }
 
         var directoryHash = hashContentSet(directoryName, innerFileHashes, innerDirectoryHashes);
