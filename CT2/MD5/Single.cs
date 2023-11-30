@@ -1,21 +1,7 @@
 namespace MyMD5;
 
-public static class DirectoryHashSingleThread
+public class DirectoryHashSingleThread : DirectoryHashCommon
 {
-    public class DirectoryHash
-    {
-        public long Time { get; }
-        public byte[] Hash { get; }
-        public string Path { get; }
-
-        public DirectoryHash(string path, long time, byte[] hash)
-        {
-            Path = path;
-            Time = time;
-            Hash = hash;
-        }
-    }
-
     public static DirectoryHash CalculateDirectoryHash(string directoryPath)
     {
         if (!Directory.Exists(directoryPath))
@@ -27,7 +13,7 @@ public static class DirectoryHashSingleThread
         stopwatch.Start();
         var resultHash = getDirectoryHash(directoryPath);
         stopwatch.Stop();
-        var result = new DirectoryHash(directoryPath, stopwatch.ElapsedMilliseconds, resultHash);
+        var result = new DirectoryHash(directoryPath, stopwatch.ElapsedMilliseconds, resultHash, "single");
         return result;
     }
     private static byte[] hashContentSet(string directoryName,
@@ -75,7 +61,7 @@ public static class DirectoryHashSingleThread
 
         foreach (var file in files)
         {
-            innerFileHashes.Append(Common.getFileHash(file));
+            innerFileHashes.Append(getFileHash(file));
         }
 
         foreach (var directory in directories)
