@@ -8,13 +8,11 @@ public class Reflector
     {
         _save_directory = Directory.GetCurrentDirectory() + "/ReflectedClasses";
     }
-
     public Reflector(string save_directory)
     {
         _save_directory = save_directory;
     }
-
-    private string GetAccessModifier(FieldInfo entity)
+    private string GetAccessModifier(FieldInfo entity)  
     {
         if (entity.IsPrivate)
             return "private ";
@@ -75,7 +73,7 @@ public class Reflector
         {
             var accessModifier = GetAccessModifier(field);
             var staticModifier = GetStaticModifier(field);
-            fields.Add($"{accessModifier}{staticModifier}{field.GetType().Name} {field.Name};");
+            fields.Add($"{accessModifier}{staticModifier}{field.FieldType} {field.Name};");
         }
         fields.Sort();
         return fields;
@@ -86,7 +84,7 @@ public class Reflector
 
         foreach (var parameter in entity.GetParameters())
         {
-            parameters.Add($"{parameter.GetType().Name} {parameter.Name}");
+            parameters.Add($"{parameter.ParameterType.Name} {parameter.Name}");
         }
         
         return String.Join(", ", parameters);
@@ -94,7 +92,6 @@ public class Reflector
     private List<string> ReadMethods(Type someClass)
     {
         var methods = new List<string>();
-
         foreach (var method in someClass.GetMethods())
         {
             var accessModifier = GetAccessModifier(method);
@@ -104,18 +101,20 @@ public class Reflector
         methods.Sort();
         return methods;
     }
-    public string GetParameters(ConstructorInfo entity)
+    private string GetParameters(ConstructorInfo entity)
     {
         var parameters = new List<string>();
 
         foreach (var parameter in entity.GetParameters())
         {
-            parameters.Add($"{parameter.GetType().Name} {parameter.Name}");
+            var p = parameter.GetType().GetType().Name;
+            Console.WriteLine(p);
+            parameters.Add($"{parameter.ParameterType} {parameter.Name}");
         }
 
         return String.Join(", ", parameters);
     }
-    public List<string> ReadConstructors(Type someClass)
+    private List<string> ReadConstructors(Type someClass)
     {
         var constructors = new List<string>();
 
@@ -126,7 +125,7 @@ public class Reflector
         constructors.Sort();
         return constructors;
     }
-    public List<List<string>> ReadSubclasses(Type someClass)
+    private List<List<string>> ReadSubclasses(Type someClass)
     {
         var subclasses = new List<List<string>>();
         foreach (var subclass in someClass.GetNestedTypes(BindingFlags.Public | BindingFlags.NonPublic))
@@ -135,7 +134,7 @@ public class Reflector
         }
         return subclasses;
     }
-    public List<string> ReadClass(Type someClass)
+    private List<string> ReadClass(Type someClass)
     {
         var result = new List<string>();
         var className = someClass.Name;
@@ -145,6 +144,7 @@ public class Reflector
         var constructors = ReadConstructors(someClass); 
         var accessModifier = GetAccessModifier(someClass);
         var staticModifier = GetStaticModifier(someClass);
+
         result.Add($"{accessModifier}{staticModifier}class {className}\n{{");
         foreach (var subclass in subclasses)
         {
@@ -158,9 +158,9 @@ public class Reflector
         foreach (var method in methods)
             result.Add(method);
         result.Add("}");
+        
         return result;
     }
-
     public void PrintStructure(Type someClass)
     {
         var className = someClass.Name;
